@@ -456,6 +456,9 @@ git push origin feature/amazing-feature
 ```
 8. **Open a Pull Request**
 
+## Testing
+#Pylint Test : pylint --disable=W,C,R app.py > errors.txt 
+
 ### Coding Standards
 - Follow PEP 8 style guidelines
 - Add docstrings to functions and classes
