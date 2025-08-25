@@ -1,0 +1,124 @@
+{
+  "leaderboard": [
+    {
+      "id": 1,
+      "name": "DragonSlayer",
+      "score": 1385,
+      "character": "\ud83d\udc09"
+    },
+    {
+      "id": 2,
+      "name": "ShadowNinja",
+      "score": 980,
+      "character": "\ud83e\udd77"
+    },
+    {
+      "id": 3,
+      "name": "PixelWizard",
+      "score": 904,
+      "character": "\ud83e\uddd9"
+    },
+    {
+      "id": 4,
+      "name": "CyberPunk",
+      "score": 650,
+      "character": "\ud83e\udd16"
+    },
+    {
+      "id": 5,
+      "name": "SpaceRanger",
+      "score": 498,
+      "character": "\ud83d\ude80"
+    },
+    {
+      "id": 6,
+      "name": "ForestArcher",
+      "score": 413,
+      "character": "\ud83c\udff9"
+    },
+    {
+      "id": 7,
+      "name": "IceQueen",
+      "score": 287,
+      "character": "\u2744\ufe0f"
+    },
+    {
+      "id": 8,
+      "name": "FireKnight",
+      "score": 243,
+      "character": "\ud83d\udd25"
+    }
+  ],
+  "events": [
+    {
+      "player_id": 1,
+      "player_name": "DragonSlayer",
+      "points": 43,
+      "timestamp": "17:29:00",
+      "message": "DragonSlayer scored 43 points!"
+    },
+    {
+      "player_id": 3,
+      "player_name": "PixelWizard",
+      "points": 47,
+      "timestamp": "17:28:59",
+      "message": "PixelWizard scored 47 points!"
+    },
+    {
+      "player_id": 6,
+      "player_name": "ForestArcher",
+      "points": 93,
+      "timestamp": "17:28:58",
+      "message": "ForestArcher scored 93 points!"
+    },
+    {
+      "player_id": 3,
+      "player_name": "PixelWizard",
+      "points": 47,
+      "timestamp": "17:28:57",
+      "message": "PixelWizard scored 47 points!"
+    },
+    {
+      "player_id": 1,
+      "player_name": "DragonSlayer",
+      "points": 55,
+      "timestamp": "17:28:55",
+      "message": "DragonSlayer scored 55 points!"
+    },
+    {
+      "player_id": 4,
+      "player_name": "CyberPunk",
+      "points": 30,
+      "timestamp": "17:28:54",
+      "message": "CyberPunk scored 30 points!"
+    },
+    {
+      "player_id": 8,
+      "player_name": "FireKnight",
+      "points": 14,
+      "timestamp": "17:28:52",
+      "message": "FireKnight scored 14 points!"
+    },
+    {
+      "player_id": 1,
+      "player_name": "DragonSlayer",
+      "points": 37,
+      "timestamp": "17:28:50",
+      "message": "DragonSlayer scored 37 points!"
+    },
+    {
+      "player_id": 3,
+      "player_name": "PixelWizard",
+      "points": 60,
+      "timestamp": "17:28:48",
+      "message": "PixelWizard scored 60 points!"
+    },
+    {
+      "player_id": 5,
+      "player_name": "SpaceRanger",
+      "points": 20,
+      "timestamp": "17:28:47",
+      "message": "SpaceRanger scored 20 points!"
+    }
+  ]
+}

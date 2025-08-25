@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Gaming Leaderboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+        }
+        .game-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .game-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        .game-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #f39c12, #e74c3c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        .leaderboard-table {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+        .table {
+            margin-bottom: 0;
+        }
+        .table thead th {
+            border: none;
+            color: #f39c12;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            padding: 15px;
+        }
+        .table tbody td {
+            border: none;
+            padding: 12px 15px;
+            vertical-align: middle;
+        }
+        .table tbody tr {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+        }
+        .table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .rank-badge {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            line-height: 30px;
+            text-align: center;
+            border-radius: 50%;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .rank-1 { background: linear-gradient(45deg, #f1c40f, #f39c12); }
+        .rank-2 { background: linear-gradient(45deg, #95a5a6, #bdc3c7); }
+        .rank-3 { background: linear-gradient(45deg, #e67e22, #d35400); }
+        .rank-other { background: rgba(255, 255, 255, 0.2); }
+        .player-name {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        .player-character {
+            font-size: 1.5rem;
+            margin-right: 10px;
+        }
+        .score {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #2ecc71;
+        }
+        .events-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            height: 300px;
+            overflow-y: auto;
+        }
+        .event-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-left: 3px solid #3498db;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 0 10px 10px 0;
+            animation: slideIn 0.5s;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(-20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .event-time {
+            font-size: 0.8rem;
+            color: #95a5a6;
+        }
+        .event-message {
+            margin-top: 5px;
+        }
+        .connection-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            border-radius: 50px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.5);
+        }
+        .connected {
+            color: #2ecc71;
+        }
+        .disconnected {
+            color: #e74c3c;
+        }
+        .score-change {
+            position: absolute;
+            right: 20px;
+            color: #2ecc71;
+            font-weight: bold;
+            animation: scoreFloat 2s ease-out forwards;
+        }
+        @keyframes scoreFloat {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-30px); opacity: 0; }
+        }
+        .highlight-row {
+            animation: highlight 1s;
+        }
+        @keyframes highlight {
+            0% { background: rgba(46, 204, 113, 0.3); }
+            100% { background: transparent; }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <h1 class="game-title">REAL-TIME GAMING LEADERBOARD</h1>
+            <p class="lead">Watch players climb the ranks in real-time!</p>
+        </div>
+        
+        <div class="leaderboard-table">
+            <table class="table table-dark">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Player</th>
+                        <th>Score</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboard-body">
+                    <!-- Leaderboard rows will be inserted here -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="events-panel">
+            <h5 class="mb-3"><i class="fas fa-bell"></i> Recent Events</h5>
+            <div id="events-container">
+                <!-- Events will be inserted here -->
+            </div>
+        </div>
+    </div>
+    
+    <div class="connection-status connected" id="connection-status">
+        <i class="fas fa-circle"></i>
+        <span>Connected</span>
+    </div>
+
+    <script>
+        // SSE connection
+        let eventSource;
+        
+        // Function to render leaderboard
+        function renderLeaderboard(leaderboard) {
+            const tbody = document.getElementById('leaderboard-body');
+            tbody.innerHTML = '';
+            
+            leaderboard.forEach((player, index) => {
+                const rank = index + 1;
+                const row = document.createElement('tr');
+                row.id = `player-${player.id}`;
+                
+                // Determine rank badge class
+                let rankClass = 'rank-other';
+                if (rank === 1) rankClass = 'rank-1';
+                else if (rank === 2) rankClass = 'rank-2';
+                else if (rank === 3) rankClass = 'rank-3';
+                
+                row.innerHTML = `
+                    <td>
+                        <span class="rank-badge ${rankClass}">${rank}</span>
+                    </td>
+                    <td>
+                        <span class="player-character">${player.character}</span>
+                        <span class="player-name">${player.name}</span>
+                    </td>
+                    <td class="score">${player.score.toLocaleString()}</td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+        
+        // Function to add new event
+        function addEvent(event) {
+            const container = document.getElementById('events-container');
+            const eventDiv = document.createElement('div');
+            eventDiv.className = 'event-item';
+            
+            eventDiv.innerHTML = `
+                <div class="event-time">${event.timestamp}</div>
+                <div class="event-message">${event.message}</div>
+            `;
+            
+            // Add to top of events
+            container.insertBefore(eventDiv, container.firstChild);
+            
+            // Remove oldest events if more than 10
+            while (container.children.length > 10) {
+                container.removeChild(container.lastChild);
+            }
+        }
+        
+        // Function to highlight player who scored
+        function highlightPlayer(playerId, points) {
+            const row = document.getElementById(`player-${playerId}`);
+            if (row) {
+                // Add highlight animation
+                row.classList.add('highlight-row');
+                setTimeout(() => {
+                    row.classList.remove('highlight-row');
+                }, 1000);
+                
+                // Show score change animation
+                const scoreCell = row.querySelector('.score');
+                const scoreChange = document.createElement('div');
+                scoreChange.className = 'score-change';
+                scoreChange.textContent = `+${points}`;
+                scoreCell.style.position = 'relative';
+                scoreCell.appendChild(scoreChange);
+                
+                setTimeout(() => {
+                    scoreChange.remove();
+                }, 2000);
+            }
+        }
+        
+        // Function to start SSE connection
+        function startEventSource() {
+            eventSource = new EventSource('/leaderboard-updates');
+            
+            eventSource.onopen = function() {
+                console.log('SSE connection opened');
+                updateConnectionStatus(true);
+            };
+            
+            eventSource.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                
+                // Update leaderboard
+                renderLeaderboard(data.leaderboard);
+                
+                // Add new events
+                data.new_events.forEach(event => {
+                    addEvent(event);
+                    highlightPlayer(event.player_id, event.points);
+                });
+            };
+            
+            eventSource.onerror = function() {
+                console.error('SSE connection error');
+                updateConnectionStatus(false);
+                
+                // Attempt to reconnect after 3 seconds
+                setTimeout(() => {
+                    console.log('Attempting to reconnect...');
+                    startEventSource();
+                }, 3000);
+            };
+        }
+        
+        // Function to update connection status
+        function updateConnectionStatus(connected) {
+            const statusElement = document.getElementById('connection-status');
+            if (connected) {
+                statusElement.className = 'connection-status connected';
+                statusElement.innerHTML = '<i class="fas fa-circle"></i><span>Connected</span>';
+            } else {
+                statusElement.className = 'connection-status disconnected';
+                statusElement.innerHTML = '<i class="fas fa-circle"></i><span>Disconnected</span>';
+            }
+        }
+        
+        // Initialize leaderboard on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Fetch initial leaderboard
+            fetch('/api/leaderboard')
+                .then(response => response.json())
+                .then(data => {
+                    renderLeaderboard(data.leaderboard);
+                    data.events.forEach(event => addEvent(event));
+                });
+            
+            // Start SSE connection
+            startEventSource();
+        });
+        
+        // Clean up when page unloads
+        window.addEventListener('beforeunload', function() {
+            if (eventSource) {
+                eventSource.close();
+            }
+        });
+    </script>
+</body>
+</html>
