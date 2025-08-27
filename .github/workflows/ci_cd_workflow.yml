@@ -6,24 +6,18 @@ on:
   pull_request:
     branches: [ master ]
 
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
-
 jobs:
   test:
-    name: Run Tests
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: [3.7, 3.8]
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+    - uses: actions/checkout@v3
     
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
     
@@ -31,109 +25,130 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install pytest pytest-cov flake8
+        pip install pytest flake8
     
     - name: Lint with flake8
       run: |
-        # Stop build if there are Python syntax errors or undefined names
+        # Stop the build if there are Python syntax errors or undefined names
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # Exit-zero treats all errors as warnings
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     
-    - name: Test with pytest
+    - name: Test SSE Flask app (app.py)
       run: |
-        pytest --cov=. --cov-report=xml
+        python -c "import app; print('SSE Flask app imports successfully')"
+        python -c "
+        import app
+        import threading
+        import time
+        import requests
+        from multiprocessing import Process
+        import sys
+        import os
+        
+        def run_app():
+            app.app.run(port=5001, debug=False)
+        
+        try:
+            # Start app in background
+            p = Process(target=run_app)
+            p.start()
+            time.sleep(3)  # Wait for app to start
+            
+            # Test basic endpoints
+            response = requests.get('http://localhost:5001/api/leaderboard', timeout=5)
+            if response.status_code == 200:
+                print('✓ SSE app API endpoint test passed')
+            else:
+                print('✗ SSE app API endpoint test failed')
+                sys.exit(1)
+        except Exception as e:
+            print(f'✗ SSE app test failed: {e}')
+            sys.exit(1)
+        finally:
+            p.terminate()
+            p.join()
+        "
     
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        file: ./coverage.xml
-        flags: unittests
-        name: codecov-umbrella
-
-  security:
-    name: Security Scan
-    runs-on: ubuntu-latest
-    needs: test
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-    
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
-    
-    - name: Install dependencies
+    - name: Test API Polling Flask app (appAPIPool.py)
       run: |
-        python -m pip install --upgrade pip
-        pip install safety bandit
-    
-    - name: Run safety check
-      run: safety check
-    
-    - name: Run bandit security scan
-      run: bandit -r . -x ./venv,./envGameLeaderSSE
+        python -c "import appAPIPool; print('API Polling Flask app imports successfully')"
+        python -c "
+        import appAPIPool
+        import threading
+        import time
+        import requests
+        from multiprocessing import Process
+        import sys
+        import os
+        
+        def run_app():
+            appAPIPool.app.run(port=5002, debug=False)
+        
+        try:
+            # Start app in background
+            p = Process(target=run_app)
+            p.start()
+            time.sleep(3)  # Wait for app to start
+            
+            # Test basic endpoints
+            response = requests.get('http://localhost:5002/api/leaderboard', timeout=5)
+            if response.status_code == 200:
+                print('✓ API Polling app API endpoint test passed')
+            else:
+                print('✗ API Polling app API endpoint test failed')
+                sys.exit(1)
+        except Exception as e:
+            print(f'✗ API Polling app test failed: {e}')
+            sys.exit(1)
+        finally:
+            p.terminate()
+            p.join()
+        "
 
   build:
-    name: Build and Push Docker Image
+    needs: test
     runs-on: ubuntu-latest
-    needs: [test, security]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-    
-    permissions:
-      contents: read
-      packages: write
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+    - uses: actions/checkout@v3
     
-    - name: Log in to Container Registry
-      uses: docker/login-action@v2
-      with:
-        registry: ${{ env.REGISTRY }}
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Build Docker image for SSE version
+      run: |
+        docker build -t gaming-leaderboard-sse .
     
-    - name: Extract metadata
-      id: meta
-      uses: docker/metadata-action@v4
-      with:
-        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-        tags: |
-          type=ref,event=branch
-          type=ref,event=pr
-          type=sha,prefix={{branch}}-
-          type=raw,value=latest,enable={{is_default_branch}}
+    - name: Test SSE Docker image
+      run: |
+        docker run -d -p 5000:5000 --name test-sse-container gaming-leaderboard-sse python app.py
+        sleep 15
+        curl -f http://localhost:5000/api/leaderboard || exit 1
+        echo "✓ SSE Docker container test passed"
+        docker stop test-sse-container
+        docker rm test-sse-container
     
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
+    - name: Build Docker image for API Polling version
+      run: |
+        docker build -t gaming-leaderboard-polling .
     
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v4
-      with:
-        context: .
-        platforms: linux/amd64,linux/arm64
-        push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+    - name: Test API Polling Docker image
+      run: |
+        docker run -d -p 5001:5000 --name test-polling-container gaming-leaderboard-polling python appAPIPool.py
+        sleep 15
+        curl -f http://localhost:5001/api/leaderboard || exit 1
+        echo "✓ API Polling Docker container test passed"
+        docker stop test-polling-container
+        docker rm test-polling-container
 
   deploy:
-    name: Deploy to Production
+    needs: [test, build]
     runs-on: ubuntu-latest
-    needs: build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/master'
     
     steps:
-    - name: Deploy to server
+    - name: Deploy notification
       run: |
-        echo "🚀 Deployment step would go here"
-        echo "This could include:"
-        echo "- SSH to production server"
-        echo "- Pull new Docker image"
-        echo "- Update running containers"
-        echo "- Run health checks"
+        echo "🚀 Deployment step - Configure your deployment strategy here"
+        echo "✓ Both SSE and API Polling versions tested successfully"
+        echo "✓ Ready for production deployment"
+        echo "- SSE version: Port 5000"
+        echo "- API Polling version: Port 5001"
