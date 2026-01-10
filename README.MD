@@ -1,4 +1,4 @@
-# 🎮 GamingLeaderboardAPI
+# 🎮 GamingLeaderboardAPIs
 
 A real-time gaming leaderboard application that demonstrates and compares **Server-Sent Events (SSE)** vs **API Polling** approaches for live data updates. Built with Flask for educational purposes to understand different real-time communication patterns.
 
@@ -31,7 +31,7 @@ This project implements a real-time gaming leaderboard using two different appro
 - Implementing thread-safe data updates in Flask
 - Building responsive web interfaces with real-time updates
 
-## 🏗️ Architecture Comparison
+## 🏗️ Architecture Comparisons
 
 ### Server-Sent Events (SSE) Architecture
 
