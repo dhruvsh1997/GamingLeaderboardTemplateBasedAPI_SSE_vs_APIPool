@@ -12,7 +12,7 @@ ENV FLASK_ENV=production
 ENV FLASK_RUN_HOST=0.0.0.0
 ENV FLASK_RUN_PORT=5000
 
-# Install system dependencies (including curl for health checks)
+# Install system dependencies (including curl for health check)
 RUN apt-get update && apt-get install -y \
     gcc \
     curl \
